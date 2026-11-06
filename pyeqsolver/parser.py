@@ -1,4 +1,5 @@
 import re
+import string
 from collections import defaultdict
 from exceptions import * 
 
@@ -12,106 +13,113 @@ class EquationParser():
         try:
             with open(self.file_path, 'r') as file:
                 lines = file.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The path \"{self.file_path}\" doesn't exist")
 
-            vars = [] # To store variables characters
-            results = [] # To temporarly store the RHS of the equations 
-            equations = [] # The final matrix
+        vars = [] # To store variables characters
+        results = [] # To temporarly store the RHS of the equations 
+        equations = [] # The final matrix
 
 
-            eq_num = 0 # To trach current equation
-            for i, line in enumerate(lines, start=1):
+        eq_num = 0 # To trach current equation
+        for i, line in enumerate(lines, start=1):
 
-                # Remove all spaces and \n  
-                line = line.strip().replace(" ", "")
+            # Remove all spaces and \n  
+            line = line.strip().replace(" ", "")
 
-                # If empty line or comment skip it 
-                if not len(line) or line[0] == '#':
+            # If empty line or comment skip it 
+            if not len(line) or line[0] == '#':
+                continue
+
+            # Check for invalid characters
+            valid_chars = set(string.ascii_letters + string.digits + "-+*=_.")
+            valid_variables = set(string.ascii_letters + string.digits + "_")
+            for char in line:
+                if char not in valid_chars:
+                    raise InvalidFileFormatException(f"Line {i}: Invalid character {char} in {line}")
+
+            # Split RHS and LHS
+            split_line = line.split('=')
+
+            if len(split_line) != 2:
+                raise InvalidFileFormatException(f"Line {i}: no or more than one '=' in {line}")
+            left, right = split_line    
+
+
+            # Split LHS by operators
+            # left = re.split(r'(\+|\-|\*)', left)
+            left = re.split(r'(\+|\-)', left)
+            # Neglect empty strings
+            left = [s for s in left if s]
+
+            coef_var = defaultdict(float) # # Create a map of variables | Var: Coeff
+            equations.append([0]*len(vars)) # Add a new line for this equation
+            negative = False # Negative flag
+            j = 0
+
+            # Iterate through LHS
+            for segment in left:
+                # If first character in line is "-" raise a flag
+                if segment[j] in ['+', '-']:
+                    negative = segment == '-'
+                    j = 0
                     continue
 
-                # Check for invalid characters
-                valid_characters = set("-+*=_.")
-                for char in line:
-                    if char not in valid_characters:
-                        raise InvalidFileFormatException(f"Line {i}: Invalid character {char} in {line}")
+                # Read the coefficient of the variable
+                coeff = ''
+                while segment[j].isdigit() or segment[j] == '.':
+                    coeff += segment[j]
+                    j += 1
+                    if j == len(segment):
+                        raise InvalidFileFormatException(f"Line {i}: operator missing in {line}")
+                    
+                # Convert to float, make it 1 if no coefficient detected
+                coeff = float(coeff) if coeff else 1.0
+                # Negate the coefficient of negative flag is raised
+                coeff = -coeff if negative else coeff
 
-                # Split RHS and LHS
-                left, right = line.replace.split('=')
+                # If there's * skip
+                if segment[j] == "*":
+                    j += 1
 
+                # If no variable
+                if j == len(segment):
+                    raise InvalidFileFormatException(f"Line {i}: operator missing in {line}")
+                
+                # Save the variable as the rest of the segment
+                variable = segment[j:]
+                
+                # Check the if variable starts with number or contains invalid characters
+                if variable[0].isnumeric() or any(c not in valid_variables for c in variable):
+                    raise InvalidFileFormatException(f"Line {i}: Invalid variable name {variable} in {line}")
 
-                # Split LHS by operators
-                # left = re.split(r'(\+|\-|\*)', left)
-                left = re.split(r'(\+|\-)', left)
-                # Neglect empty strings
-                left = [s for s in left if s]
+                
+                # If new variable, add it and increase all equation sizes
+                if variable not in vars:
+                    vars.append(variable)
+                    for eq in equations:
+                        eq.append(0)
 
-                # Create a map of variables
-                coef_var = defaultdict(float) # Var: Coeff
-                # Create a new row for this equation
-                equations.append([0]*len(vars)) # Add a new line for this equation
-                negative = False # Negative flag
+                # Update the map
+                coef_var[variable] += coeff
                 j = 0
 
-                # Iterate through LHS
-                for segment in left:
-                    # If first character in line is "-" raise a flag
-                    if segment[j] in ['+', '-']:
-                        negative = segment == '-'
-                        j = 0
-                        continue
+            # Add coefficient to matrix:
+            for var in vars:
+                equations[eq_num][vars.index(var)] = coef_var[var]
 
-                    # Read the coefficient of the variable
-                    coeff = ''
-                    while segment[j].isdigit() or segment[j] == '.':
-                        coeff += segment[j]
-                        j += 1
-                    # Convert to float, make it 1 if no coefficient detected
-                    coeff = float(coeff) if coeff else 1.0
-                    # Negate the coefficient of negative flag is raised
-                    coeff = -coeff if negative else coeff
+            # Save the RHS if correct
+            try:
+                results.append(float(right)) # Append the RHS value
+            except ValueError:
+                raise InvalidFileFormatException(f"Line {i}: Invalid RHS {right} in {line}")
+            
+            eq_num += 1
 
-                    # If there's * or skip
-                    if segment[j] == "*":
-                        j += 1
-                    # If * then something, raise error
-                    if len(segment[j:]) == 0:
-                        raise InvalidFileFormatException(f"Line {i}: * with two operator after each other in {line}")
-                    
-                    # Save the variable as the rest of the segment
-                    variable = segment[j:]
+        for i, eq in enumerate(equations):
+            eq.append(results[i])
 
-                    # Check the variable:
-                    if variable[0].isnumeric():
-                        raise InvalidFileFormatException(f"Line {i}: Invalid variable name {variable} in {line}")
-
-                    
-                    # If new variable, add it and increase all equation sizes
-                    if variable not in vars:
-                        vars.append(variable)
-                        for eq in equations:
-                            eq.append(0)
-
-                    # Update the map
-                    coef_var[variable] += coeff
-                    j = 0
-
-                # Add coefficient to matrix:
-                for var in vars:
-                    equations[eq_num][vars.index(var)] = coef_var[var]
-
-                # Save the RHS if correct
-                try:
-                    results.append(float(right)) # Append the RHS value
-                except ValueError:
-                    raise InvalidFileFormatException(f"Line {i}: Invalid RHS {right} in {line}")
-                
-                eq_num += 1
-
-            for i, eq in enumerate(equations):
-                eq.append(results[i])
-
-            return equations, vars
-        except Exception:
-            pass
+        return equations, vars
 
 
 
