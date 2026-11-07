@@ -13,7 +13,7 @@ class EquationParser():
         try:
             with open(self.file_path, 'r') as file:
                 lines = file.readlines()
-        except FileNotFoundError:
+        except FileNotFoundError: # File not found
             raise FileNotFoundError(f"The path \"{self.file_path}\" doesn't exist")
 
         vars = [] # To store variables characters
@@ -51,19 +51,27 @@ class EquationParser():
             left = re.split(r'(\+|\-)', left)
             # Neglect empty strings
             left = [s for s in left if s]
+            if len(left) == 0:
+                raise InvalidFileFormatException(f"Line {i}: Empty LHS in {line}")
 
             coef_var = defaultdict(float) # # Create a map of variables | Var: Coeff
             equations.append([0]*len(vars)) # Add a new line for this equation
             negative = False # Negative flag
+            last_operator = False # To check for consecitive operators
             j = 0
 
             # Iterate through LHS
             for segment in left:
                 # If first character in line is "-" raise a flag
                 if segment[j] in ['+', '-']:
+                    if last_operator: # If two consecitive operators, raise error
+                        raise InvalidFileFormatException(f"Line {i}: Can't have multiple operators in a row in {line}")
+                    last_operator = True
                     negative = segment == '-'
                     j = 0
                     continue
+                else:
+                    last_operator = False
 
                 # Read the coefficient of the variable
                 coeff = ''
@@ -112,7 +120,11 @@ class EquationParser():
             try:
                 results.append(float(right)) # Append the RHS value
             except ValueError:
-                raise InvalidFileFormatException(f"Line {i}: Invalid RHS {right} in {line}")
+                if len(right) == 0:
+                    msg = f"Line {i}: Empty RHS in {line}"
+                else:
+                    msg = f"Line {i}: Invalid RHS \"{right}\" in {line}"
+                raise InvalidFileFormatException(msg)
             
             eq_num += 1
 
@@ -123,8 +135,7 @@ class EquationParser():
 
 
 
-test = EquationParser("pyeqsolver\\equations.txt")
-equations, vars = test.parse()
-print(equations)
-print(vars)
-
+# test = EquationParser("pyeqsolver\\equations.txt")
+# equations, vars = test.parse()
+# print(equations)
+# print(vars)

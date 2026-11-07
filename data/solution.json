@@ -1,0 +1,12 @@
+{
+  "status": "SUCCESS",
+  "system_info": {
+    "num_variables": 3,
+    "num_equations": 3
+  },
+  "solution": {
+    "x": 5.0,
+    "y": 3.0,
+    "z": -2.0
+  }
+}

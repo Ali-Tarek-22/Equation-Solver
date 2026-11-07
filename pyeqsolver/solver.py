@@ -10,7 +10,7 @@ class GaussianSolver():
         self.__ABSOLUTE = 1e-9
 
         self._check_matrix()
-        self.solution = {}
+        self.solutions = {}
 
     def solve(self) -> dict[str, float]:
         # Callculate the RREF of the matrix
@@ -20,7 +20,7 @@ class GaussianSolver():
         
         self._find_solution()
 
-        return self.solution
+        return self.solutions
 
 
     def get_metadata(self) -> dict:
@@ -97,7 +97,7 @@ class GaussianSolver():
             while j < self.columns and self.matrix[i][j] == 0:
                 j += 1
 
-            self.solution[self.variables[j]] = self.matrix[i][-1] 
+            self.solutions[self.variables[j]] = self.matrix[i][-1] 
 
 
     def _is_zero_row(self, row):
@@ -150,10 +150,11 @@ class GaussianSolver():
 
 # parser = EquationParser("pyeqsolver\\equations.txt")
 # equations, vars = parser.parse()
-# print(equations)
+# # print(equations)
 # g = GaussianSolver(equations, vars)
 # print(g)
-# g.solve()
+# print(vars)
+# solutions = g.solve()
 # print(g)
-# print(g.solution)
+# print(solutions)
 
