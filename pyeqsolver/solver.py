@@ -1,6 +1,5 @@
 import copy
-from exceptions import *
-from parser import EquationParser
+from .exceptions import *
 
 class GaussianSolver():
     def __init__(self, matrix, variables=""):
@@ -31,29 +30,28 @@ class GaussianSolver():
         # Iterate through each column
         current_row = 0
         for current_col in range(self.columns-1):
-            # print("_"*20)
-            # Get first row with non-zero element in the column
-            pivot_row = None
+            # Get maximum absolute pivot in the column (at first assume maximum pivot is the curront one)
+            max_pivot = self.matrix[current_row][current_col]
+            max_pivot_idx = current_row
             for row in range(current_row, self.rows):
-                if abs(self.matrix[row][current_col]) > self.__ABSOLUTE:
-                    pivot_row = row
-                    break
+                if abs(self.matrix[row][current_col] )> abs(max_pivot):
+                    max_pivot = self.matrix[row][current_col]
+                    max_pivot_idx = row
+
             # If zero column, skip it
-            if pivot_row == None:
-                # print("Whole column is zeros, skipped")
+            if max_pivot == 0: 
                 continue
-            # Swap the current row with the pivot_row 
+            pivot_row = max_pivot_idx
+
+            # Swap rows (if found larger pivot)
             if pivot_row != current_row:
                 self.matrix[pivot_row], self.matrix[current_row] = self.matrix[current_row], self.matrix[pivot_row]
             # Update the pivot 
-            pivot_row = current_row
-            # print(f"{current_row} swapped with {pivot_row}\n{self}")
-            
+
             # Normalize the row
             pivot = self.matrix[current_row][current_col]
             for col in range(self.columns):
                 self.matrix[current_row][col] = self._zeroize(self.matrix[current_row][col]/pivot)
-            # print(f"Normalized with {pivot}\n", self)
 
             # Eliminate numbers above and below
             for row in range(self.rows):
@@ -62,14 +60,18 @@ class GaussianSolver():
                 if row == current_row or coeff == 0:
                     continue
                 for col in range(self.columns):
-                    # print(self.matrix[row][col], self.matrix[pivot_row][col], coeff)
-                    self.matrix[row][col] = self._zeroize(self.matrix[row][col]-self.matrix[pivot_row][col] * coeff)
-            # print(f"Eliminated column\n{self}")
+                    self.matrix[row][col] = self._zeroize(self.matrix[row][col]-self.matrix[current_row][col] * coeff)
             current_row += 1
 
     def _check_matrix(self):
         if self.rows < len(self.variables):
-            raise DimensionMismatchException(f"{self.rows} equations for {self.num_variables} variables ({self.variables})")
+            # Create the message
+            msg = ''
+            for i, var in enumerate(self.variables):
+                msg += var
+                if i < self.num_variables-1:
+                    msg += ", "
+            raise DimensionMismatchException(f"{self.rows} equations for {self.num_variables} variables ({msg})")
 
         num_zero_rows = 0
         for i in range(self.rows):
@@ -118,43 +120,3 @@ class GaussianSolver():
             result += str(row) + ",\n"
         result = result[:-1] + "]"
         return result
-
-# matrix = [
-# [1.0, 1.0, 1.0, 6.0],
-# [4, 10, -2, 54],
-# [2.0, 5.0, -1.0, 27.0],
-# [0.0, 2.0, 5.0, -4.0],
-# ]
-# matrix = [
-#     [0, 2, -1, -4],
-#     [2, 0, -1, -11],
-#     [-2, 0, 0, 22]
-# # ]
-# matrix = [
-#     [1, 2, -1, -4],
-#     [2, 3, -1, -11],
-#     [-2, 0, -3, 22]
-# ]
-
-# 10x1 + 5x2 = 5
-# -4x2 + 3x3 = 10
-# x1 + 6x3 = 12
-# x2 - 1.3*x3 = -2
-
-# matrix = [
-#     [10, 5, 0, 5],
-#     [0, 4, 3, 10],
-#     [1, 0, 6, 12],
-# ]
-
-
-# parser = EquationParser("pyeqsolver\\equations.txt")
-# equations, vars = parser.parse()
-# # print(equations)
-# g = GaussianSolver(equations, vars)
-# print(g)
-# print(vars)
-# solutions = g.solve()
-# print(g)
-# print(solutions)
-

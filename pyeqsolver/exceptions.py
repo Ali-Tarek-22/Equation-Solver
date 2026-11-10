@@ -3,8 +3,7 @@ class PyEqSolverError(Exception):
     pass
 
 class InvalidFileFormatException(PyEqSolverError):
-    """A line breaks the syntax rules above, or the file has no equations
-    """
+    """A line breaks the syntax rules above, or the file has no equations"""
     pass
 
 class DimensionMismatchException(PyEqSolverError):

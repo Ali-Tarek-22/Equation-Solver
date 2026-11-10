@@ -1,5 +1,4 @@
 import json
-from solver import *
 
 class JSONExporter():
     def __init__(self, output_path):
@@ -12,13 +11,11 @@ class JSONExporter():
         with open(self.output_path, 'w') as f:
             json.dump(result, f, indent=2)
 
-
-parser = EquationParser("pyeqsolver/equations.txt")
-
-equations, vars = parser.parse()
-solver = GaussianSolver(matrix=equations, variables=vars)
-solutions = solver.solve()
-print(solutions)
-
-exporter = JSONExporter(output_path="data/solution.json")
-exporter.save(solutions=solutions, metadata=solver.get_metadata())
+    def save_error(self, e):
+        result = {
+            "status": "ERROR",
+            "error_type": type(e).__name__,
+            "message": str(e),
+            }
+        with open(self.output_path, 'w') as f:
+            json.dump(result, f, indent=2)

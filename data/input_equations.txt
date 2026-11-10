@@ -1,3 +1,29 @@
-10x1 + 5x2 = 5
-4x2 + 3x3 = 10
-x1 + 6x3 = 12
+ 10x1 + 5x2 = 5
+ 4x2 + 3x3 = 10
+ x1 + 6x3 = 12
+
+
+# 0.00000001x + 1y = 1
+# 1*x + y = 2
+
+# Example of no solution
+# 3x + 2y = 5
+# 6x + 4y = 8
+
+
+# Example of infinite solutions
+# 3x + 2y = 5
+# 6x + 4y = 10
+
+# Example of #equations < #variables
+# 3x + 2y + 10z= 5
+# 6x + 4y - z= 10
+
+# Example of invalide character
+# 2x + (3y) = 7
+
+# Example of missing =
+# 2x + 3y 7
+
+# Example of multiple =
+# 2x + 3y == 7

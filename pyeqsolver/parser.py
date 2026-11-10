@@ -1,7 +1,7 @@
 import re
 import string
 from collections import defaultdict
-from exceptions import * 
+from .exceptions import * 
 
 class EquationParser():
     def __init__(self, file_path):
@@ -14,7 +14,7 @@ class EquationParser():
             with open(self.file_path, 'r') as file:
                 lines = file.readlines()
         except FileNotFoundError: # File not found
-            raise FileNotFoundError(f"The path \"{self.file_path}\" doesn't exist")
+            raise FileNotFoundError(f'The path "{self.file_path}" doesn\'t exist')
 
         vars = [] # To store variables characters
         results = [] # To temporarly store the RHS of the equations 
@@ -36,7 +36,7 @@ class EquationParser():
             valid_variables = set(string.ascii_letters + string.digits + "_")
             for char in line:
                 if char not in valid_chars:
-                    raise InvalidFileFormatException(f"Line {i}: Invalid character {char} in {line}")
+                    raise InvalidFileFormatException(f"Line {i}: Invalid character '{char}' in {line}")
 
             # Split RHS and LHS
             split_line = line.split('=')
@@ -132,10 +132,3 @@ class EquationParser():
             eq.append(results[i])
 
         return equations, vars
-
-
-
-# test = EquationParser("pyeqsolver\\equations.txt")
-# equations, vars = test.parse()
-# print(equations)
-# print(vars)
